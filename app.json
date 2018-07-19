@@ -1,0 +1,39 @@
+{
+  "pages":[
+    "pages/index/index",
+    "pages/detail/detail",
+    "pages/logs/logs"
+  ],
+  "window":{
+    "backgroundTextStyle":"light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "上色生活",
+    "navigationBarTextStyle":"black"
+  },
+  "tabBar": {
+    "color": "#000",
+    "borderStyle": "white",
+    "backgroundColor": "#fff",
+    "selectedColor": "#fc3151",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "images/home.png",
+        "selectedIconPath": "images/home-selected.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/logs/logs",
+        "iconPath": "images/category.png",
+        "selectedIconPath": "images/category-selected.png",
+        "text": "TA们"
+      },
+      {
+        "pagePath": "pages/logs/logs",
+        "iconPath": "images/user.png",
+        "selectedIconPath": "images/user-selected.png",
+        "text": "我的"
+      }
+    ]
+  }
+}
