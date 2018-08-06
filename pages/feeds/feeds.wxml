@@ -1,0 +1,92 @@
+<!-- 导航菜单 -->
+<scroll-view class="menus" scroll-x>
+    <!-- 关注的人 -->
+    <view class="btn-area" >
+        <view class="person" wx:for="{{persons}}" wx:for-index="index" wx:for-item="person" wx:key="_key">
+            <!--navigator  id="{{person._key}}" url="../detail/detail?id={{datalist[i].stories[j].id}}"-->
+              <image class="person-img{{person._key==currentPerson?'-selected':''}}" mode="aspectFill" bindload="WxMasonryImageLoad" src="{{person.avatarUrl}}" bindtap="changePerson" data-id="{{person._key}}"/>
+              <view class="person-name">{{person.nickName}}</view>
+            <!--/navigator-->
+        </view>
+    </view>
+</scroll-view>
+
+<!-- 主体：根据Category切换 -->
+<swiper class="swiper-box" duration="300" style="height:{{winHeight - 16}}px" bindchange="bindChange">
+    <swiper-item>
+        <scroll-view class="hot-box" scroll-y="true" upper-threshold="50" 
+                    lower-threshold="100" bindscrolltolower="scrolltolower">
+            <!-- 广告位 -->
+            <!--view class="hot-main">
+                <view class="hot-main-box">
+                    <view class="hot-main-title">上色</view>
+                    <view class="hot-main-subtitle">小确幸，大生活</view>
+                </view>
+            </view-->
+            <!-- 瀑布流 -->
+            <view class="hot-box-main WxMasonryView" >
+                <block wx:for="{{datalist}}" wx:for-index="i" wx:key="">
+                    <view class="WxMasonry">
+                        <navigator  id="{{item._key}}" url="../detail/detail?id={{item._key}}">
+                            <view class="mainbody">
+                              <!--image-->
+                              <image class="WxMasonryImage" id="{{item.id}}" mode="aspectFill" src="{{item.images[0]}}" />
+                              <!--author-->
+                              <view class="host">
+                                <view class="host-avatar">
+                                  <image class="host-avatar-img" mode="aspectFill" bindload="WxMasonryImageLoad" src="{{item.images[0]}}"/>
+                                </view>
+                                <text class="host-name">{{item.title}}</text>
+                              </view>
+                            </view>
+                            <!--tags-->
+                            <view class="shopping">
+                              <view class="shopping-summary" wx:if="{{item.distributor.images.length>0 || item.seller.images.length>0 ||item.manufacturer.images.length>0}}">
+                                  <image class="shopping-icon" mode="aspectFit" src="{{item.distributor.images[0]}}" wx:if="{{item.distributor.images.length>0}}"/>
+                                  <image class="shopping-icon" mode="aspectFit" src="{{item.seller.images[0]}}" wx:if="{{item.seller.images.length>0}}"/>
+                                  <image class="shopping-icon" mode="aspectFit" src="{{item.manufacturer.images[0]}}" wx:if="{{item.manufacturer.images.length>0}}"/>
+                              </view>
+                              <view class="shopping-summary" wx:else>
+                                  <image class="shopping-icon" mode="aspectFit" src="http://p0.ifengimg.com/pmop/2018/0329/DED012EB32D2EC3B32836003977F245B2BC49D44_size12_w740_h412.jpeg"/>
+                              </view>
+                              <view class="likes">
+                                <text class="likes-number">999</text>
+                              </view>      
+                            </view>
+                            <view class="list-box">
+                              <!--标题与标签-->
+                              <view class="main-item">
+                                <!--title-->
+                                <view class="list-box-title">{{item.title}}</view>
+                                <!--tags-->
+                                <view class="tags" wx:if="{{item.tags.length>0}}">
+                                  <navigator wx:for="{{item.tags}}" id="{{tag}}" wx:for-item="tag" wx:key="">
+                                      <view class="tag-text" wx:if="{{tag.length>0}}">#{{tag}}</view>
+                                  </navigator>
+                                </view>
+                              </view>
+                              <!--相关指数-->
+                              <view class="similarity">
+                                <view class="similarity-title">相关度%</view>
+                                <view class="similarity-score">87.5</view>
+                              </view>
+                            </view>
+                        </navigator>
+
+                    </view>
+                </block>
+            </view>
+
+            <!-- 加载进度与提示 -->
+            <view hidden="{{hotshidden}}" class="hot-box-more">
+                <view wx:if="{{hothidden}}">
+                    <image src="http://brim.co.in/wp-content/uploads/2014/10/loader.gif" mode="aspectFill"/>
+                </view>
+                <view wx:else>
+                    <text> 没有更多了 </text>
+                </view>
+            </view>
+
+        </scroll-view>
+    </swiper-item>
+</swiper>

@@ -1,0 +1,56 @@
+<template name="list">
+    <view class="list" hover-class="none" data-tip="{{tip}}" data-url="{{url}}">
+        <view class="list-icon-wrap"><image src="{{icon}}" class="list-icon"></image></view>
+        <view class="list-text">{{text}}</view>
+        <view class="arrow-wrap">{{tip}}<image src="images/accessory.png" class="list-arrow"></image></view>
+    </view>
+    <view hidden="{{!cut?true:false}}" style="height: 23.44rpx;"></view>
+</template>
+
+<scroll-view scroll-y="trues" class="user">
+    <view class="info">
+        <view class="info-general">
+          <image class="general-icon" src="{{userInfo.avatarUrl}}" catchtap="navigateTo" data-url-type="userinfo"></image>
+        </view>
+        <view class="info-detail">
+          <progress percent="80" stroke-width="12" active/>
+          <view class="info-text info-blank">{{userInfo.nickName}}</view>
+          <view class="info-text info-blank">喜爱甜食的大白型胖纸</view>
+        </view>
+        <view class="info-badge">
+          <image class="badge-icon" src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1533029023&di=12a587d22acd53f834d22f57295d52fd&imgtype=jpg&er=1&src=http%3A%2F%2Fg.hiphotos.baidu.com%2Fzhidao%2Fwh%253D450%252C600%2Fsign%3D09a14e08252dd42a5f5c09af360b7783%2Fb21bb051f8198618e8f1f4e54aed2e738bd4e619.jpg" catchtap="navigateTo" data-url-type="userinfo"></image>
+          <view class="info-text">等级：6</view>
+        </view>
+    </view>
+
+    <!--template is="list" data="{{...order}}"></template-->
+    <view class="order">
+        <block wx:for="{{orderCell}}" wx:key="">
+            <navigator hover-class="none" url="{{item.url}}" class="order-cell">
+                <image class="{{item.class}}" src="{{item.icon}}"></image>
+                <view class="badge" wx:if="{{ item.count > 0 }}">{{item.count}}</view>
+                <view>{{item.text}}</view>
+            </navigator>
+        </block>
+    </view>
+    <!--template wx:for="{{list}}" is="list" data="{{...item}}" wx:key=""></template-->
+    <!--personas: show 3 matched personas-->
+    <view class="personas">
+        <block wx:for="{{personas}}" wx:key="">
+            <navigator hover-class="none" url="{{item.url}}" class="persona">
+                <image class="persona-icon" src="{{item.image}}" mode="aspectFill" ></image>
+                <view class="persona-name">{{item.name}}</view>
+            </navigator>
+        </block>
+    </view>
+
+    <!--tags: show tag list-->
+    <view class="tags">
+        <block wx:for="{{candidateTags}}" wx:key="">
+            <navigator hover-class="none" url="{{item}}">
+                <view wx:if="{{colorful[index]}}" class="tag" style="background-color:{{colors[index]}};color:white;border-color:{{colors[index]}}">{{item}}</view>
+                <view wx:else class="tag-pending">{{item}}</view>
+            </navigator>
+        </block>
+    </view>
+</scroll-view>

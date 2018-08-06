@@ -1,0 +1,111 @@
+<template name="list">
+    <view class="list" hover-class="none" data-tip="{{tip}}" data-url="{{url}}" catchtap='navigateTo'>
+        <view class="list-icon-wrap"><image src="{{icon}}" class="list-icon"></image></view>
+        <view class="list-text">{{text}}</view>
+        <view class="arrow-wrap">{{tip}}<image src="images/accessory.png" class="list-arrow"></image></view>
+    </view>
+    <view hidden="{{!cut?true:false}}" style="height: 23.44rpx;"></view>
+</template>
+
+<scroll-view scroll-y="true" class="user" style="height:{{winHeight}}px"  upper-threshold="50" lower-threshold="100" bindscrolltolower="scrolltolower">
+    <view class="info">
+        <view class="info-general">
+          <image class="general-icon" src="{{userInfo.avatarUrl}}" catchtap="navigateTo" data-url="{{userInfo._key}}"></image>
+        </view>
+        <view class="info-detail">
+          <progress percent="80" stroke-width="12" active/>
+          <view class="info-text info-blank">{{userInfo.nickName}}</view>
+          <view class="info-text info-blank">喜爱甜食的大白型胖纸</view>
+        </view>
+        <view class="info-badge">
+          <image class="badge-icon" src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1533029023&di=12a587d22acd53f834d22f57295d52fd&imgtype=jpg&er=1&src=http%3A%2F%2Fg.hiphotos.baidu.com%2Fzhidao%2Fwh%253D450%252C600%2Fsign%3D09a14e08252dd42a5f5c09af360b7783%2Fb21bb051f8198618e8f1f4e54aed2e738bd4e619.jpg" catchtap="navigateTo" data-url-type="userinfo"></image>
+          <view class="info-text">等级：6</view>
+        </view>
+    </view>
+
+    <!--template is="list" data="{{...order}}"></template-->
+    <view class="order">
+        <block wx:for="{{orderCell}}" wx:key="">
+            <navigator hover-class="none" url="{{item.url}}" class="order-cell">
+                <image class="{{item.class}}" src="{{item.icon}}"></image>
+                <view class="badge" wx:if="{{ item.count > 0 }}">{{item.count}}</view>
+                <view>{{item.text}}</view>
+            </navigator>
+        </block>
+    </view>
+    <!--template wx:for="{{list}}" is="list" data="{{...item}}" wx:key=""></template-->
+    <!--personas: show 3 matched personas-->
+    <view class="personas">
+        <block wx:for="{{personas}}" wx:key="">
+            <navigator hover-class="none" url="{{item.url}}" class="persona">
+                <image class="persona-icon" src="{{item.image}}" mode="aspectFill" ></image>
+                <view class="persona-name">{{item.name}}</view>
+            </navigator>
+        </block>
+    </view>
+
+    <!--activities-->
+    <!-- 瀑布流 -->
+    <view class="hot-box-main WxMasonryView" >
+        <block wx:for="{{datalist}}" wx:for-item="item" wx:for-index="i" wx:key="">
+            <view class="WxMasonry">
+                <navigator  id="{{item._key}}" url="../../detail/detail?id={{item._key}}">
+                    <view class="mainbody">
+                      <!--image-->
+                      <image class="WxMasonryImage" id="{{item._key}}" mode="aspectFill" src="{{item.images[0]}}" />
+                      <!--author-->
+                      <view class="host">
+                        <view class="host-avatar">
+                          <image class="host-avatar-img" mode="aspectFill" src="{{item.images[0]}}"/>
+                        </view>
+                        <text class="host-name">{{item.title}}</text>
+                      </view>
+                    </view>
+                    <!--tags-->
+                    <view class="shopping">
+                      <view class="shopping-summary" wx:if="{{item.distributor.images.length>0 || item.seller.images.length>0 ||item.manufacturer.images.length>0}}">
+                          <image class="shopping-icon" mode="aspectFit" src="{{item.distributor.images[0]}}" wx:if="{{item.distributor.images.length>0}}"/>
+                          <image class="shopping-icon" mode="aspectFit" src="{{item.seller.images[0]}}" wx:if="{{item.seller.images.length>0}}"/>
+                          <image class="shopping-icon" mode="aspectFit" src="{{item.manufacturer.images[0]}}" wx:if="{{item.manufacturer.images.length>0}}"/>
+                      </view>
+                      <view class="shopping-summary" wx:else>
+                          <image class="shopping-icon" mode="aspectFit" src="http://p0.ifengimg.com/pmop/2018/0329/DED012EB32D2EC3B32836003977F245B2BC49D44_size12_w740_h412.jpeg"/>
+                      </view>
+                      <view class="likes">
+                        <text class="likes-number">999</text>
+                      </view>      
+                    </view>
+                    <view class="list-box">
+                      <!--标题与标签-->
+                      <view class="main-item">
+                        <!--title-->
+                        <view class="list-box-title">{{item.title}}</view>
+                        <!--tags-->
+                        <view class="tags" wx:if="{{item.tags.length>0}}">
+                          <navigator wx:for="{{item.tags}}" id="{{tag}}" wx:for-item="tag" wx:key="">
+                              <view class="tag-text" wx:if="{{tag.length>0}}">#{{tag}}</view>
+                          </navigator>
+                        </view>
+                      </view>
+                      <!--相关指数-->
+                      <view class="similarity">
+                        <view class="similarity-title">相关度%</view>
+                        <view class="similarity-score">87.5</view>
+                      </view>
+                    </view>
+                </navigator>
+
+            </view>
+        </block>
+    </view>
+
+    <!-- 加载进度与提示 -->
+    <view hidden="{{hotshidden}}" class="hot-box-more">
+        <view wx:if="{{hothidden}}">
+            <image src="http://brim.co.in/wp-content/uploads/2014/10/loader.gif" mode="aspectFill"/>
+        </view>
+        <view wx:else>
+            <text> 没有更多了 </text>
+        </view>
+    </view>    
+</scroll-view>

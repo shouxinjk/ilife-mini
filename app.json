@@ -1,14 +1,19 @@
 {
-  "pages":[
+  "pages": [
     "pages/index/index",
+    "pages/home/home",
+    "pages/feeds/feeds",
+    "pages/circle/circle",
+    "pages/user/user",
     "pages/detail/detail",
-    "pages/logs/logs"
+    "pages/user/profile/profile",
+    "pages/user/profile/user"
   ],
-  "window":{
-    "backgroundTextStyle":"light",
+  "window": {
+    "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
     "navigationBarTitleText": "上色生活",
-    "navigationBarTextStyle":"black"
+    "navigationBarTextStyle": "black"
   },
   "tabBar": {
     "color": "#000",
@@ -17,22 +22,28 @@
     "selectedColor": "#fc3151",
     "list": [
       {
-        "pagePath": "pages/index/index",
+        "pagePath": "pages/home/home",
         "iconPath": "images/home.png",
         "selectedIconPath": "images/home-selected.png",
-        "text": "首页"
+        "text": "大生活"
       },
       {
-        "pagePath": "pages/logs/logs",
+        "pagePath": "pages/feeds/feeds",
+        "iconPath": "images/cart.png",
+        "selectedIconPath": "images/cart-selected.png",
+        "text": "小确幸"
+      },
+      {
+        "pagePath": "pages/circle/circle",
         "iconPath": "images/category.png",
         "selectedIconPath": "images/category-selected.png",
         "text": "TA们"
       },
       {
-        "pagePath": "pages/logs/logs",
+        "pagePath": "pages/user/user",
         "iconPath": "images/user.png",
         "selectedIconPath": "images/user-selected.png",
-        "text": "我的"
+        "text": "我"
       }
     ]
   }

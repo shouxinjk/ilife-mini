@@ -1,97 +1,222 @@
-
+var app = getApp();
 const util = require( '../../utils/util.js' );
 
 Page( {
     data: {
-        // text:"这是一个页面"
-        data: [],
-        databody: null,
-        comments : [],  // 评论
+        //swiper 配置
+        indicatorDots: true,
+        vertical: false,
+        autoplay: true,
+        circular: true,
+        interval: 2000,
+        duration: 500,
+        previousMargin: 0,
+        nextMargin: 0,      
 
+        // 主数据
+        userInfo:{},//当前用户，用于分享时或从分享进入引用
+        accuracyThreshhold:0.5,//根据准确度判定提示用户修正persona
+        stuff: {},// 内容对象
+        actions : [],  // 该内容下用户行为列表
+        hosts:[],//推荐用户列表
+        maxHosts: 5,//最多显示hosts个数
+        foldHosts:false,//是否折叠显示hosts
+
+        // 系统信息
         winHeight: 0,   // 设备高度
 
         // 弹窗
         modalHidden: true,
         modalValue: null,
 
-        /**
-         * 分享配置
-         */
+        //分享配置
         shareShow: 'none',
         shareOpacity: {},
         shareBottom: {},
-
     },
-    onLoad: function( options ) {
-        // 页面初始化 options 为页面跳转所带来的参数
-        var that = this
-        var id = options.id;
 
-
-        // 请求内容数据
-        util.AJAX( "news/" + id, function( res ) {
-
-            var arr = res.data;
-            var body = arr.body;
-            body = body.match( /<p>.*?<\/p>/g );
-            var ss = [];
-            for( var i = 0, len = body.length; i < len;i++ ) {
-
-                ss[ i ] = /<img.*?>/.test( body[ i ] );
-
-                if( ss[ i ] ) {
-                    body[ i ] = body[ i ].match( /(http:|https:).*?\.(jpg|jpeg|gif|png)/ );
-                } else {
-                    body[ i ] = body[ i ].replace( /<p>/g, '' )
-                        .replace( /<\/p>/g, '' )
-                        .replace( /<strong>/g, '' )
-                        .replace( /<\/strong>/g, '' )
-                        .replace( /<a.*?\/a>/g, '' )
-                        .replace( /&nbsp;/g, ' ' )
-                        .replace( /&ldquo;/g, '"' )
-                        .replace( /&rdquo;/g, '"' );
-                }
-            }
-
-            // 重新写入数据
-            that.setData( {
-                data: arr,
-                databody: body
-            });
-
+    // 根据ID请求Stuff数据
+    loadData:function(stuff_id){
+      var that = this;
+      util.AJAX("my/stuff/" + stuff_id, function (res) {
+        var data = res.data;
+        console.log("Detail::loadStuff",data);
+        that.setData({
+          stuff: data,
+          userInfo:app.globalData.userInfo
         });
-
-        // 请求评论
-        util.AJAX( "story/" + id + "/short-comments", function( res ) {
-
-            var arr = res.data.comments;
-            
-            for ( var i = 0, len = arr.length; i < len; i++ ){
-                arr[i]['times'] = util.getTime( arr[i].time );
-            }
-
-            // 重新写入数据
-            that.setData( {
-                comments: arr
-            });
-
-        });
-
-        /**
-         * 获取系统信息
-         */
-        wx.getSystemInfo( {
-
-            success: function( res ) {
-                that.setData( {
-                    winWidth: res.windowWidth,
-                    winHeight: res.windowHeight
-                });
-            }
-        });
-
-
+        //change page title
+        wx.setNavigationBarTitle({
+          title: that.data.stuff.title
+        })
+      });
     },
+
+    //根据ID请求Hosts数据
+    loadHosts: function (stuff_id) {
+      console.log("Detail::loadHosts", stuff_id);
+      var that = this
+      util.AJAX("user/users", function (res) {
+        var arr = res.data;
+        var list = [];
+        var numberOfHosts = that.data.maxHosts;
+        numberOfHosts = Math.floor(Math.random() * 10)+1;//for test:we only add 
+        for (var i = 0; i < numberOfHosts && i<arr.length;i++){
+          list = list.concat(arr[i]);
+        }
+        that.setData({
+          hosts: list,// 存储数据
+          foldHosts: numberOfHosts>that.data.maxHosts?true:false
+        });
+      });
+    },
+
+    // 根据ID请求用户行为
+    loadActions: function (stuff_id) {
+      console.log("Detail::loadActions", stuff_id);
+      var that = this;
+      util.AJAX("user/users", function (res) {
+        var data = res.data;
+        var list = [];
+        var max = Math.floor(Math.random() * 10);//for test:we only add 
+        for(var i=0;i<max && i<data.length;i++){
+          list = list.concat(data[i]);
+        }
+        that.setData({
+          actions: list
+        });
+      });
+    },
+
+  onLoad: function( options ) {
+    // 页面初始化 options 为页面跳转所带来的参数
+    var that = this
+    console.log("Detail::onLoad detail page got params.", options);
+    //用户信息检查
+    util.flightCheck({
+      success: function (res) {
+        console.log("Detail::Onload login success.", res.data);
+        that.setData({
+          openid: res.data.openid
+        });
+        //check and push user info to server side if it is a new one
+        util.checkPerson(res.data.openid, that.checkPersonCallback);
+      },
+      fail: function (res) {
+        console.log("Detail::Onload login failed.", res)
+      }
+    });
+
+    //处理分享进入
+    that.processShareMsg(options);//对于通过分享页进入的情况进行处理
+
+    //数据加载
+    var id = options.id;
+    that.loadData(id);//加载主数据
+    that.loadHosts(id);//加载Hosts列表
+
+    //获取系统信息
+    wx.getSystemInfo( {
+        success: function( res ) {
+            that.setData( {
+                winWidth: res.windowWidth,
+                winHeight: res.windowHeight
+            });
+        }
+    });
+
+    //显示分享菜单
+    wx.showShareMenu({
+      withShareTicket: true
+    });
+  },
+
+  //checkPersonCallback
+  checkPersonCallback: function (res) {
+    var that = this;
+    if (app.globalData.isDebug) console.log("Detail::checkPersonCallback Query if user exists.[openid]" + that.data.openid, res);
+    if (res.data._key == that.data.openid) {
+      if (app.globalData.isDebug) console.log("Detail::checkPersonCallback The user exists.show home page");
+      //set active userInfo
+      app.globalData.userInfo = res.data;
+    } else {
+      if (app.globalData.isDebug) console.log("Detail::checkPersonCallback It is a new user. We will create one.");
+      util.createPerson(that.data.openid, that.createPersonCallback);
+    }
+  },
+
+  //createPersonCallback
+  createPersonCallback: function (res) {
+    if (app.globalData.isDebug) console.log("Detail::createPersonCallback", res);
+  },
+
+  //updatePersonCallback
+  updatePersonCallback: function (res) {
+    if (app.globalData.isDebug) console.log("Detail::updatePersonCallback", res);
+    //set active userInfo
+    app.globalData.userInfo = res.data;
+  },
+
+  jump: function (e) {
+    console.log("Detail::jump navigate to", e);
+    const userId = e.currentTarget.dataset.url;
+    wx.navigateTo({
+      url: "/pages/user/profile/user?id=" + userId
+    });
+  },
+
+  //处理带有分享用户及分享信息的情况
+  processShareMsg: function (options) {
+    console.log("Detail::processShareMsg Process share information.", options);
+    if (options.user) {//分享链接，但信息未处理
+      console.log("Detail::processShareMsg Landing from share message. TODO recoginze new user and do something.", options);
+      //建立默认链接
+      //判定并修改用户persona
+      //根据用户是否授权显示授权按钮
+    } else {
+      console.log("Detail::processShareMsg This is not a share page. ", options);
+    }
+  },
+
+  onShareAppMessage: function (res) {
+    var that = this
+    if (res.from === 'button') {
+      // 来自页面内转发按钮
+      console.log("Detail::onShareAppMessage Share from button.",res.target)
+    }
+    //准备分享参数
+    var query_json={
+      "id": that.data.stuff._key,
+      "user": app.globalData.userInfo._key,
+      "persona":"to_change_persona"
+    };
+    return {
+      title: that.data.stuff.title,
+      //注意：为保证从分享页能够进入首页与主菜单，分享入口均通过home进行
+      path: '/pages/home/home?share=detail&query='+JSON.stringify(query_json),
+      success: function (t) {
+        console.log("Detail::onShareAppMessage share message.",t)
+        // console.log
+        wx.getShareInfo({
+          shareTicket: t.shareTickets[0],
+          complete: function (t) { console.log(t) }
+        })
+      },
+      fail: function (t) {
+        // 分享失败
+        console.log(t)
+      }
+    }
+  },
+
+  buy:function(e){
+    console.log("Detail::buy TODO. try to navigate to original page.",e);
+  },
+
+  like:function (e) {
+    console.log("Detail::like TODO. try to like the item.", e);
+  },
+
     /**
      * 显示分享
      */
@@ -182,13 +307,13 @@ Page( {
     },
 
     onReady: function() {
-        // 页面渲染完成
-        // 修改页面标题
+        // 页面渲染完成:修改页面标题
+        //不能在这里完成，执行时有可能AJAX尚未返回数据
+        /*
         wx.setNavigationBarTitle( {
-            title: this.data.data.title
+            title: this.data.stuff.title
         })
-
-
+        //*/
     },
     onShow: function() {
         // 页面显示

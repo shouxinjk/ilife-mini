@@ -1,0 +1,56 @@
+<!-- 导航菜单 -->
+<scroll-view class="menus" scroll-x>
+  <view class="btn-area">
+    <navigator url="/pages/home/home?category={{item.id}}" hover-class="navigator-hover" class="menu{{currentCategory==item.id?'-selected':''}}{{item.numbers>7?' red-point':''}}" wx:for="{{categories}}" wx:key="" catchtap="changeCategory" data-id="{{item.id}}">{{item.name}}</navigator>
+  </view>
+</scroll-view>
+
+<!-- 主体：根据Category切换 -->
+<swiper class="swiper-box" duration="300" style="height:{{winHeight - 16}}px" bindchange="bindChange">
+    <swiper-item>
+        <scroll-view class="hot-box" scroll-y="true" upper-threshold="50" 
+                    lower-threshold="100" bindscrolltolower="scrolltolower">
+            <!-- 广告位 -->
+            <view class="hot-main">
+                <view class="hot-main-box">
+                    <view class="hot-main-title">上色</view>
+                    <view class="hot-main-subtitle">小确幸，大生活</view>
+                </view>
+            </view>
+            <!-- 瀑布流 -->
+            <view class="hot-box-main WxMasonryView" >
+                <block wx:for="{{datalist}}" wx:for-item="item" wx:for-index="i" wx:key="">
+                    <view class="WxMasonry">
+                        <navigator  id="{{item.id}}" url="../detail/detail?id={{item._key}}">
+                            <image class="WxMasonryImage" id="{{item._key}}" mode="aspectFill" src="{{item.images[0]}}" />
+                            <view class="list-box-title">{{item.title}}</view>
+                        </navigator>
+                        <view class="meta">
+                          <view class="host">
+                            <view class="host-avatar">
+                              <image class="host-avatar-img" mode="aspectFill" src="{{item.images[0]}}"/>
+                              
+                            </view>
+                            <text class="host-name">{{item.title}}</text>
+                          </view>
+                          <view class="likes">
+                            <text class="likes-number">999</text>
+                          </view>
+                        </view>
+                    </view>
+                </block>
+            </view>
+
+            <!-- 加载进度与提示 -->
+            <view hidden="{{hotshidden}}" class="hot-box-more">
+                <view wx:if="{{hothidden}}">
+                    <image src="http://brim.co.in/wp-content/uploads/2014/10/loader.gif" mode="aspectFill"/>
+                </view>
+                <view wx:else>
+                    <text> 没有更多了 </text>
+                </view>
+            </view>
+
+        </scroll-view>
+    </swiper-item>
+</swiper>

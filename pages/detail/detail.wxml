@@ -1,15 +1,107 @@
+<!--template: 单一host直接展示-->
+<template name="host">
+<view class="connections">
+    <!--头像与摘要-->
+    <view class="list" hover-class="none" data-tip="{{tip}}" data-url="{{_key}}" catchtap='jump'>
+        <view class="list-icon-wrap"><image src="{{avatarUrl}}" class="list-icon"  mode="aspectFill"></image></view>
+        <view class="list-text-wrap">
+          <view class="list-text">{{nickName}}</view>
+          <view class="list-text small">喜爱甜食的大白型胖纸资深死宅</view>
+        </view>
+    </view>
+    <!--相关指数-->
+    <view class="similarity">
+      <view class="list-text silver small">相关度</view>
+      <view class="list-text green large">87.5%</view>
+    </view>
+    <!-- 关注按钮 -->
+    <view wx:if="{{connected}}" class="btn-wrap-small">
+      <button class="btn-small toconnect">加关注</button> 
+    </view>
+    <view wx:else class="btn-wrap-small">
+      <button class="btn-small connected">已关注</button> 
+    </view>
+</view>    
+</template>
+
+<!--多个Hosts折叠显示-->
+<template name="mhost">
+<view class="person" data-url="{{_key}}" catchtap='jump'>
+    <image class="person-img" mode="aspectFill" src="{{avatarUrl}}" data-url="{{_key}}" catchtap='jump'/>
+    <view class="person-name">{{nickName}}</view>
+    <!-- 关注按钮 -->
+    <view class="connect-status{{connected?'':'-pending'}}">{{connected?'已关注':'+关注'}}</view> 
+</view>  
+</template>  
+
+<!--
+页面结构：
+图片幻灯，能够自动播放，便于浏览
+来源county、distributor、seller标记tag   右侧是匹配度指数，跨两行
+标题（可换行）
+推荐者列表，可能有多个，为系统推荐用户，能够显示关注状态
+推荐理由（或描述）
+关联列表，可能有多个，显示相似度
+图片列表
+底部悬浮操作栏：点赞、转发、收藏、购买、评论（暂不提供）
+-->
 <scroll-view scroll-y="true" class="contain_detail_cnt" style="height:{{winHeight - 40}}px;">
-    
+  <!--image swipper-->
+  <view>
+    <swiper
+      indicator-dots="{{indicatorDots}}" autoplay="{{autoplay}}" circular="{{circular}}" vertical="{{vertical}}"
+      interval="{{interval}}" duration="{{duration}}" previous-margin="{{previousMargin}}px" next-margin="{{nextMargin}}px" class="swiper">
+      <block wx:for="{{stuff.images}}" wx:key="*this">
+        <swiper-item>
+          <image class="WxMasonryImage" id="{{index}}" mode="aspectFill" src="{{item}}" />
+        </swiper-item>
+      </block>
+    </swiper>
+  </view>
+  <!--来源及匹配度-->
+  <view class="shopping">
+    <view class="shopping-summary" wx:if="{{stuff.distributor.images.length>0 || stuff.seller.images.length>0 ||stuff.manufacturer.images.length>0}}">
+        <image class="shopping-icon" mode="aspectFit" src="{{stuff.distributor.images[0]}}" wx:if="{{stuff.distributor.images.length>0}}"/>
+        <image class="shopping-icon" mode="aspectFit" src="{{stuff.seller.images[0]}}" wx:if="{{stuff.seller.images.length>0}}"/>
+        <image class="shopping-icon" mode="aspectFit" src="{{stuff.manufacturer.images[0]}}" wx:if="{{stuff.manufacturer.images.length>0}}"/>
+    </view>
+    <view class="shopping-summary" wx:else>
+        <image class="shopping-icon" mode="aspectFit" src="http://p0.ifengimg.com/pmop/2018/0329/DED012EB32D2EC3B32836003977F245B2BC49D44_size12_w740_h412.jpeg"/>
+    </view>
+    <view class="likes">
+      <text class="likes-number">999</text>
+    </view>      
+  </view>  
+  <!--标签列表-->
+  <view class="tags" wx:if="{{stuff.tags.length>0}}">
+    <navigator wx:for="{{stuff.tags}}" id="{{tag}}" wx:for-item="tag" wx:key="" url="">
+        <view class="tag-text" wx:if="{{tag.length>0}}">#{{tag}}</view>
+    </navigator>
+  </view>  
 	<!-- 标题 -->
 	<view class="box-title">
-		<text class="title">{{data.title}}</text>
+		<text class="title">{{stuff.title}}</text>
 	</view>
-
+  <!--author可能有多个-->
+  <block wx:if="{{foldHosts}}">
+    <scroll-view class="menus" scroll-x>
+        <view class="btn-area" >
+          
+            <template wx:for="{{hosts}}" is="mhost" data="{{...item}}" wx:key=""></template>
+          
+        </view>
+    </scroll-view>  
+  </block>
+  <block wx:else>
+  <template wx:for="{{hosts}}" is="host" data="{{...item}}" wx:key=""></template>     </block>  
+  <!--描述-->
+  <view class="content">{{stuff.title}}</view>
+  <!--相关内容：主要显示可替换选项TODO-->
+  <view class="alternatives"></view>
 	<!-- 内容 -->
 	<view class="content" scroll-y="true">
-		<block wx:for="{{databody}}">
-			<image class="scrollLoading" src="{{item[0]}}" mode="aspectFill" wx:if="{{item.length === 3}}"/>
-			<view class="contView" wx:else>{{item}}</view>
+		<block wx:for="{{stuff.images}}" wx:key="">
+			<image class="scrollLoading"  style="width:100%" src="{{item}}" mode="widthFix"/>
 		</block>
 	</view>
 
@@ -32,30 +124,42 @@
 		<!-- 没有评论 -->
 		<view class="not-comments" wx:else> 暂时还没有评论喔! </view>
 	</view>
-
-
 </scroll-view>
 
-<!-- 评论 点赞 分享  -->
-<view class="extra">
-	<view class="extra-share">
-		<image src="../../static/share.png" class="extra-share-img" bindtap="showShare"/>
-		<image src="../../static/comments.png" class="extra-share-img"/>
-		<image src="../../static/zan.png" class="extra-share-img"/>
-	</view>
-	<input class="extra-input" type="text" maxlength="255" placeholder="你有什么看法?" placeholder-class="extra-placeholder" />
+<!-- 信息不准确修正提示 -->
+<view class="baseline" wx:if="{{userInfo.accuracy && userInfo.accuracy<accuracyThreshhold}}">
+  <navigator url="/pages/index/index?mode=revise&persona=999">
+      <view class="tip-text">信息不完整，立即修正</view>
+  </navigator>
+</view> 
+
+<view class="toolbar">
+    <button bindtap='like' class="toolbar-btn btn-like">收藏 | 999</button>
+    <view class="toolbar-separator"></view>
+    <button bindtap='buy' class="toolbar-btn btn-buy">购买 | 1.26万</button>
+    <view class="toolbar-separator"></view>
+    <button open-type='share' class="toolbar-btn btn-share">分享 | 5400</button>
 </view>
 
+<!-- 评论 点赞 分享  -->
+<!--view class="extra">
+	<view class="extra-share">
+		<image src="../../images/share.png" class="extra-share-img" bindtap="showShare"/>
+		<image src="../../images/comment.png" class="extra-share-img"/>
+		<image src="../../images/favorite.png" class="extra-share-img"/>
+	</view>
+	<input class="extra-input" type="text" maxlength="255" placeholder="你有什么看法?" placeholder-class="extra-placeholder" />
+</view-->
 
-<!-- 分享层 -->
+<!-- 分享层：当前不支持 -->
 <view class="extra-share-box" style="display:{{shareShow}}">
 
 	<view class="share-box-show" animation="{{shareBottom}}">
 		<view class="share-box-img-box">
-			<image class="share-box-img" bindtap="modalTap" data-share="分享给微信朋友" src="../../static/weixin.png"/>
-			<image class="share-box-img" bindtap="modalTap" data-share="分享到微信朋友圈" src="../../static/pengyou.png"/>
-			<image class="share-box-img" bindtap="modalTap" data-share="分享到QQ朋友" src="../../static/qq.png"/>
-			<image class="share-box-img" bindtap="modalTap" data-share="分享到微博" src="../../static/weibo.png"/>
+			<image class="share-box-img" bindtap="modalTap" data-share="分享给微信朋友" src="../../images/weixin.png"/>
+			<image class="share-box-img" bindtap="modalTap" data-share="分享到微信朋友圈" src="../../images/pengyouquan.png"/>
+			<image class="share-box-img" bindtap="modalTap" data-share="分享到QQ朋友" src="../../images/qq.png"/>
+			<image class="share-box-img" bindtap="modalTap" data-share="分享到微博" src="../../images/weibo.png"/>
 		</view>
 		<view class="share-box-close" bindtap="shareClose">关闭</view>
 	</view>

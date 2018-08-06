@@ -1,0 +1,44 @@
+<template name="connection">
+<view class="connections">
+    <!--头像与摘要-->
+    <view class="list" hover-class="none" data-tip="{{tip}}" data-url="{{_key}}" catchtap='jump'>
+        <view class="list-icon-wrap"><image src="{{avatarUrl}}" class="list-icon"  mode="aspectFill"></image></view>
+        <view class="list-text-wrap">
+          <view class="list-text">{{nickName}}</view>
+          <view class="list-text small">喜爱甜食的大白型胖纸资深死宅</view>
+        </view>
+    </view>
+    <!--相关指数-->
+    <view class="similarity">
+      <view class="list-text silver small">相关度</view>
+      <view class="list-text green large">87.5%</view>
+    </view>
+    <!-- 关注按钮 -->
+    <view wx:if="{{connected}}" class="btn-wrap-small">
+      <button class="btn-small toconnect">加关注</button> 
+    </view>
+    <view wx:else class="btn-wrap-small">
+      <button class="btn-small connected">已关注</button> 
+    </view>
+</view>    
+</template>
+
+<scroll-view scroll-y="true" class="scroll-list" style="height:{{winHeight}}px"  upper-threshold="50" lower-threshold="100" bindscrolltolower="scrolltolower">
+    <!--添加按钮-->
+    <view class="btn-wrap">
+      <button class="btn">添加关心的TA</button> 
+    </view>
+
+    <!--推荐及关注列表-->
+    <template wx:for="{{connections}}" is="connection" data="{{...item}}" wx:key=""></template>
+
+    <!-- 加载进度与提示 -->
+    <view hidden="{{hotshidden}}" class="hot-box-more">
+        <view wx:if="{{hothidden}}">
+            <image src="http://brim.co.in/wp-content/uploads/2014/10/loader.gif" mode="aspectFill"/>
+        </view>
+        <view wx:else>
+            <text> 没有更多了 </text>
+        </view>
+    </view>    
+</scroll-view>

@@ -1,14 +1,5 @@
 <!-- 广告位 -->
-<view class="hot-main">
-    <view class="hot-main-box">
-        <view class="host-avatar">
-          <open-data type="userAvatarUrl"></open-data>
-        </view>
-        <view class="host-name hot-main-title">
-          <open-data type="userNickName" lang="zh_CN"></open-data>
-        </view>    
-    </view>
-</view>
+<button open-type="getUserInfo" bindtap='login'>获取用户信息</button> 
 <!--logs.wxml-->
 <view class="container log-list">
   <block wx:for="{{logs}}" wx:for-item="log" wx:key="*this">
