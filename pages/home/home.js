@@ -10,9 +10,26 @@ Page({
     winHeight: 0,
     // 数据
     datalist: [],
-    categories: [{id:0,name:"推荐"}],
+    categories: [{id:0,name:"推荐",tagging:""}],
 
-    currentCategory:0
+    currentCategory:0,
+    tagging:"",
+    page:{//翻页控制
+      size: 20,//每页条数
+      total: 1,//总页数
+      current: -1//当前翻页
+    },
+    esQuery:{//搜索控制
+      from: 0,
+      size: 20,//注意：需要手动设置为一致
+      query: {
+        match_all: {}
+      },
+      sort: [
+        { "@timestamp": { order: "desc" } },
+        { "_score": { order: "desc" } }
+      ]
+    }
   },
   //事件处理函数
   bindViewTap: function () {
@@ -45,6 +62,7 @@ Page({
     that.setData({
       currentCategory: options.category ? options.category:0
     });
+
     /**
     * 获取系统信息
     */
@@ -117,18 +135,64 @@ Page({
     });
   },
 
-  //load my stuff
+  //加载列表
   loadData: function () {
-    var that = this
-    util.AJAX("my/stuff", function (res) {
-      var arr = res.data;
-      // 获取当前数据进行保存
-      var list = that.data.datalist;
-      // 然后重新写入数据
-      that.setData({
-        datalist: list.concat(arr),// 存储数据
-      });
+    var that = this;
+    var q = {
+      match: {
+        full_text: ""
+      }
+    };
+    if (that.data.tagging.trim().length > 0) {//使用指定内容进行搜索
+      q.match.full_text = that.data.tagging;
+      that.data.esQuery.query = q;
+    } else {//搜索全部
+      that.data.esQuery.query = {
+        match_all: {}
+      };
+    }
+    //处理翻页并更新query
+    var query = that.data.esQuery;
+    query.from = (that.data.page.current + 1) * that.data.page.size;
+    that.setData({//更新查询条件
+      esQuery:query
     });
+    //console.log("query object", that.data.esQuery);
+    //设置请求头
+    var esHeader = {
+      "Content-Type": "application/json",
+        "Authorization": "Basic ZWxhc3RpYzpjaGFuZ2VtZQ=="
+    };
+    util.AJAX("https://data.pcitech.cn/stuff/_search", function (res) {
+      //console.log("now parsing search result.",res);
+      if (res.data.hits.hits.length == 0) {//如果没有内容，则显示提示文字
+        that.setData({
+          showloading: false,
+          shownomore: true
+        });
+      } else {
+        var arr = res.data.hits.hits;// 获取结果
+        var total = res.data.hits.total;//获取匹配总数
+
+        var page = that.data.page;
+        page.total = (total + page.size - 1) / page.size;
+        page.current = page.current + 1;
+        that.setData({page:page});//更新翻页信息
+
+        var list = that.data.datalist;// 获取当前数据列表
+        for (var i = 0; i < arr.length; i++) {//将搜索结果放入列表
+          list.push(arr[i]._source);
+        }
+
+        // 然后重新写入数据
+        that.setData({
+          datalist: list,
+          showloading:false,
+          shownomore:false
+        });
+      }
+      //console.log("page object", that.data.page);
+    }, "post", JSON.stringify(that.data.esQuery), esHeader);
   },
   /**
      * 事件处理
@@ -140,7 +204,7 @@ Page({
 
     // 加载更多 loading
     that.setData({
-      hothidden: true
+      showloading: true
     })
 
     var currentDate = this.data.dataListDateCurrent;
@@ -150,7 +214,7 @@ Page({
 
       // 加载更多 loading
       that.setData({
-        hothidden: false
+        showloading: false
       });
 
     } else {
@@ -162,9 +226,17 @@ Page({
   changeCategory: function (e) {
     var that=this;
     var ids = e.currentTarget.dataset.id;
+    var tagging = e.currentTarget.dataset.tagging;
     if (app.globalData.isDebug) console.log("Home::changeCategory [id]" + ids);
+    var page = that.data.page;
+    page.current = -1;//从第一页开始查看
+    var query = that.data.esQuery;
+    query.from = 0;//从第一页开始搜索
     this.setData({ 
       currentCategory: ids,
+      tagging:tagging,
+      page:page,//恢复翻页
+      esQuery:query,//恢复搜索翻页
       datalist:[] //clear current datalist
     });
     //TODO: clear red-point of current cateogry
@@ -287,7 +359,7 @@ Page({
         }
       }, 1500)
     } else {
-      console.log("Detail::processShareMsg This is not a share page. ", options);
+      console.log("Home::processShareMsg This is not landing from share page. ", options);
     }
   },
 })

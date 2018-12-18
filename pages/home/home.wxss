@@ -102,6 +102,13 @@
 .hot-box-more{
   width:100%;
   font-size:12px;
+  text-align: center;
+  margin:5px auto;
+}
+
+.hot-box-more image{
+  width:100px;
+  text-align: center;
   margin:5px auto;
 }
 

@@ -78,14 +78,12 @@
             </view>
 
             <!-- 加载进度与提示 -->
-            <view hidden="{{hotshidden}}" class="hot-box-more">
-                <view wx:if="{{hothidden}}">
-                    <image src="http://brim.co.in/wp-content/uploads/2014/10/loader.gif" mode="aspectFill"/>
-                </view>
-                <view wx:else>
-                    <text> 没有更多了 </text>
-                </view>
+            <view class="hot-box-more" wx:if="{{showloading}}">
+              <image src="http://www.uusucai.com/d/file/web/tubiao/2015/06/19/5fc1dd5e77261ac65f5412ba66b466e4.gif" mode="widthFix"/>
             </view>
+            <view class="hot-box-more" wx:if="{{shownomore}}">    
+              <text> 没有更多了 </text>
+            </view>  
 
         </scroll-view>
     </swiper-item>

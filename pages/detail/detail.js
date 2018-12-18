@@ -15,12 +15,15 @@ Page( {
 
         // 主数据
         userInfo:{},//当前用户，用于分享时或从分享进入引用
-        accuracyThreshhold:0.5,//根据准确度判定提示用户修正persona
+        accuracyThreshhold:0,//根据准确度判定提示用户修正persona，当前不做检查
         stuff: {},// 内容对象
         actions : [],  // 该内容下用户行为列表
         hosts:[],//推荐用户列表
         maxHosts: 5,//最多显示hosts个数
         foldHosts:false,//是否折叠显示hosts
+
+        // 状态数据
+        isLiked: false,
 
         // 系统信息
         winHeight: 0,   // 设备高度
@@ -48,45 +51,111 @@ Page( {
         //change page title
         wx.setNavigationBarTitle({
           title: that.data.stuff.title
-        })
+        });
+        //更新收藏状态
+        that.checkLikeStatus();
+        //记录用户行为
+        util.trace("view", {
+          itemId: that.data.stuff._key,
+          userId: app.globalData.userInfo._key,
+          item: that.data.stuff,
+          user: app.globalData.userInfo
+        });
       });
     },
 
-    //根据ID请求Hosts数据
-    loadHosts: function (stuff_id) {
-      console.log("Detail::loadHosts", stuff_id);
-      var that = this
-      util.AJAX("user/users", function (res) {
-        var arr = res.data;
-        var list = [];
-        var numberOfHosts = that.data.maxHosts;
-        numberOfHosts = Math.floor(Math.random() * 10)+1;//for test:we only add 
-        for (var i = 0; i < numberOfHosts && i<arr.length;i++){
-          list = list.concat(arr[i]);
+  //根据ID请求Hosts数据
+  loadHosts: function (stuff_id) {
+    console.log("Detail::loadHosts", stuff_id);
+    var that = this
+    ////////////////
+    //设置query
+    var esQuery = {//搜索控制
+      from: 0,
+      size: 30,//注意：当前仅固定取20条记录，通过排重后显示
+      query: {
+        bool: {
+          must: [
+            {
+              "match": {
+                "itemId": stuff_id
+              }
+            }
+          ]
         }
+      },
+      sort: [
+        { "weight": { order: "desc" } },
+        { "@timestamp": { order: "desc" } },
+        { "_score": { order: "desc" } }
+      ]
+    };
+    //设置请求头
+    var esHeader = {
+      "Content-Type": "application/json",
+      "Authorization": "Basic ZWxhc3RpYzpjaGFuZ2VtZQ=="
+    };
+    util.AJAX("https://data.pcitech.cn/actions/_search", function (res) {
+      //console.log("now parsing search result.",res);
+      if (res.data.hits.hits.length == 0) {//如果没有内容，则显示提示文字
+        //do nothing
+      } else {
+        var numberOfHosts = 0;
+        var arr = res.data.hits.hits;// 获取结果
+        var list = [];
+        var userIds = [];
+        for (var i = 0; i < arr.length; i++) {//将搜索结果放入列表，需要根据用户ID排重
+          var record = arr[i]._source;
+          var uid = record.user._key;
+          if(uid && userIds.indexOf(uid)<0){
+            userIds.push(uid);
+            list.push(record.user);
+            numberOfHosts++;
+          }
+        }
+
+        // 然后重新写入数据
         that.setData({
           hosts: list,// 存储数据
-          foldHosts: numberOfHosts>that.data.maxHosts?true:false
+          foldHosts: numberOfHosts > that.data.maxHosts //少于3条则平铺，否则折叠为一行
         });
-      });
-    },
+      }
+    }, "post", JSON.stringify(esQuery), esHeader);
 
-    // 根据ID请求用户行为
-    loadActions: function (stuff_id) {
-      console.log("Detail::loadActions", stuff_id);
-      var that = this;
-      util.AJAX("user/users", function (res) {
-        var data = res.data;
-        var list = [];
-        var max = Math.floor(Math.random() * 10);//for test:we only add 
-        for(var i=0;i<max && i<data.length;i++){
-          list = list.concat(data[i]);
-        }
-        that.setData({
-          actions: list
-        });
+    /*
+    //deprecated: load from db
+    util.AJAX("user/users", function (res) {
+      var arr = res.data;
+      var list = [];
+      var numberOfHosts = that.data.maxHosts;
+      numberOfHosts = Math.floor(Math.random() * 10) + 1;//for test:we only add 
+      for (var i = 0; i < numberOfHosts && i < arr.length; i++) {
+        list = list.concat(arr[i]);
+      }
+      that.setData({
+        hosts: list,// 存储数据
+        foldHosts: numberOfHosts > that.data.maxHosts //少于3条则平铺，否则折叠为一行
       });
-    },
+    });
+    // */
+  },
+
+  // 根据ID请求用户行为：当前不生效
+  loadActions: function (stuff_id) {
+    console.log("Detail::loadActions", stuff_id);
+    var that = this;
+    util.AJAX("user/users", function (res) {
+      var data = res.data;
+      var list = [];
+      var max = Math.floor(Math.random() * 10);//for test:we only add 
+      for(var i=0;i<max && i<data.length;i++){
+        list = list.concat(data[i]);
+      }
+      that.setData({
+        actions: list
+      });
+    });
+  },
 
   onLoad: function( options ) {
     // 页面初始化 options 为页面跳转所带来的参数
@@ -190,6 +259,13 @@ Page( {
       "user": app.globalData.userInfo._key,
       "persona":"to_change_persona"
     };
+    //记录用户行为
+    util.trace("share", {
+      itemId: that.data.stuff._key,
+      userId: app.globalData.userInfo._key,
+      item: that.data.stuff,
+      user: app.globalData.userInfo
+    });    
     return {
       title: that.data.stuff.title,
       //注意：为保证从分享页能够进入首页与主菜单，分享入口均通过home进行
@@ -200,7 +276,7 @@ Page( {
         wx.getShareInfo({
           shareTicket: t.shareTickets[0],
           complete: function (t) { console.log(t) }
-        })
+        });
       },
       fail: function (t) {
         // 分享失败
@@ -210,11 +286,88 @@ Page( {
   },
 
   buy:function(e){
+    var that = this;
     console.log("Detail::buy TODO. try to navigate to original page.",e);
+    //记录用户行为
+    util.trace("buy step1", {
+      itemId: that.data.stuff._key,
+      userId: app.globalData.userInfo._key,
+      item: that.data.stuff,
+      user: app.globalData.userInfo
+    });   
+    //将淘口令或URL复制到剪贴板 并提示用户后续操作
+    wx.setClipboardData({
+      data: "http://www.shouxinjk.net/list/go.html?id=" + that.data.stuff._key,//将URL设置到剪贴板
+      success(res) {
+        that.showShare(e);
+        setTimeout(function () {//设置自动关闭提示
+          that.shareClose();
+        }, 2000)
+      }
+    });  
   },
 
   like:function (e) {
+    var that = this;
     console.log("Detail::like TODO. try to like the item.", e);
+    //记录用户行为
+    util.trace("like", {
+      itemId: that.data.stuff._key,
+      userId: app.globalData.userInfo._key,
+      item: that.data.stuff,
+      user: app.globalData.userInfo
+    },function(res){
+      //更改收藏状态：这里使用简单方法：如果收藏操作发生为基数次则为“已收藏”  
+      that.checkLikeStatus();
+    });   
+  },
+
+  //修改收藏图标
+  checkLikeStatus: function () {
+    var that = this;
+    //设置query
+    var esQuery = {
+      query: {
+        bool: {
+          must: [
+            {
+              match: {
+                action: "like"
+              }
+            }, 
+            {
+              match: {
+                userId: app.globalData.userInfo._key//userid
+              }
+            },
+            {
+              match: {
+                itemId: that.data.stuff._key//itemid
+              }
+            }
+          ]
+        }
+      }
+    };
+    //////////////////
+    //设置请求头
+    var esHeader = {
+      "Content-Type": "application/json",
+      "Authorization": "Basic ZWxhc3RpYzpjaGFuZ2VtZQ=="
+    };
+    //console.log("esQuery.",esQuery);
+    util.AJAX("https://data.pcitech.cn/actions/doc/_count", function (res) {
+      console.log("esQuery result.",res);
+      if (res.data.count%2 == 0) {//如果为偶数则为已取消收藏
+        that.setData({
+          isLiked:false
+        });
+      } else {//否则为已收藏
+        that.setData({
+          isLiked:true
+        });
+      }
+    }, "post", JSON.stringify(esQuery), esHeader);
   },
 
     /**
@@ -265,7 +418,7 @@ Page( {
         var that = this;
 
         setTimeout( function() {
-            that.animation.bottom( -210 ).step();
+            that.animation.bottom( -50 ).step();
             that.setData( {
                 shareBottom: animation.export()
             });

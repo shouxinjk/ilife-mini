@@ -26,15 +26,16 @@
     <!--template is="list" data="{{...order}}"></template-->
     <view class="order">
         <block wx:for="{{orderCell}}" wx:key="">
-            <navigator hover-class="none" url="{{item.url}}" class="order-cell">
+            <navigator hover-class="none" catchtap="changeActionType" data-id="{{item.id}}" data-tagging="{{item.tagging}}" class="order-cell">
                 <image class="{{item.class}}" src="{{item.icon}}"></image>
                 <view class="badge" wx:if="{{ item.count > 0 }}">{{item.count}}</view>
-                <view>{{item.text}}</view>
+                <view class="actiontype{{item.id==currentActionType?'-selected':''}}">{{item.text}}</view>
             </navigator>
         </block>
     </view>
     <!--template wx:for="{{list}}" is="list" data="{{...item}}" wx:key=""></template-->
     <!--personas: show 3 matched personas-->
+    <!--
     <view class="personas">
         <block wx:for="{{personas}}" wx:key="">
             <navigator hover-class="none" url="{{item.url}}" class="persona">
@@ -43,7 +44,7 @@
             </navigator>
         </block>
     </view>
-
+    -->
     <!--activities-->
     <!-- 瀑布流 -->
     <view class="hot-box-main WxMasonryView" >
@@ -100,12 +101,10 @@
     </view>
 
     <!-- 加载进度与提示 -->
-    <view hidden="{{hotshidden}}" class="hot-box-more">
-        <view wx:if="{{hothidden}}">
-            <image src="http://brim.co.in/wp-content/uploads/2014/10/loader.gif" mode="aspectFill"/>
-        </view>
-        <view wx:else>
-            <text> 没有更多了 </text>
-        </view>
+    <view class="hot-box-more" wx:if="{{showloading}}">
+      <image src="http://www.uusucai.com/d/file/web/tubiao/2015/06/19/5fc1dd5e77261ac65f5412ba66b466e4.gif" mode="widthFix"/>
+    </view>
+    <view class="hot-box-more" wx:if="{{shownomore}}">    
+      <text> 没有更多动态了 </text>
     </view>    
 </scroll-view>

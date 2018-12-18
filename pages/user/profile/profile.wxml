@@ -24,6 +24,7 @@
     </view>
 
     <!--template is="list" data="{{...order}}"></template-->
+    <!--
     <view class="order">
         <block wx:for="{{orderCell}}" wx:key="">
             <navigator hover-class="none" url="{{item.url}}" class="order-cell">
@@ -33,6 +34,7 @@
             </navigator>
         </block>
     </view>
+    -->
     <!--template wx:for="{{list}}" is="list" data="{{...item}}" wx:key=""></template-->
     <!--personas: show 3 matched personas-->
     <view class="personas">

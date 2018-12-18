@@ -21,7 +21,7 @@
     <view wx:else class="btn-wrap-small">
       <button class="btn-small connected">已关注</button> 
     </view>
-</view>    
+</view>
 </template>
 
 <!--多个Hosts折叠显示-->
@@ -134,11 +134,16 @@
 </view> 
 
 <view class="toolbar">
-    <button bindtap='like' class="toolbar-btn btn-like">收藏 | 999</button>
-    <view class="toolbar-separator"></view>
-    <button bindtap='buy' class="toolbar-btn btn-buy">购买 | 1.26万</button>
-    <view class="toolbar-separator"></view>
-    <button open-type='share' class="toolbar-btn btn-share">分享 | 5400</button>
+  <block wx:if="{{isLiked}}">
+    <button bindtap='like' class="toolbar-btn btn-liked">收藏 | 999</button>  
+  </block>
+  <block wx:else>
+    <button bindtap='like' class="toolbar-btn btn-like">收藏 | 998</button> 
+  </block>
+  <view class="toolbar-separator"></view>
+  <button bindtap='buy' class="toolbar-btn btn-buy">购买 | 1.26万</button>
+  <view class="toolbar-separator"></view>
+  <button open-type='share' class="toolbar-btn btn-share">分享 | 5400</button>
 </view>
 
 <!-- 评论 点赞 分享  -->
@@ -151,17 +156,18 @@
 	<input class="extra-input" type="text" maxlength="255" placeholder="你有什么看法?" placeholder-class="extra-placeholder" />
 </view-->
 
-<!-- 分享层：当前不支持 -->
+<!-- 分享层：当前用于提示用户通过浏览器继续访问，完成后续操作 -->
 <view class="extra-share-box" style="display:{{shareShow}}">
 
 	<view class="share-box-show" animation="{{shareBottom}}">
-		<view class="share-box-img-box">
+		<!--view class="share-box-img-box">
 			<image class="share-box-img" bindtap="modalTap" data-share="分享给微信朋友" src="../../images/weixin.png"/>
 			<image class="share-box-img" bindtap="modalTap" data-share="分享到微信朋友圈" src="../../images/pengyouquan.png"/>
 			<image class="share-box-img" bindtap="modalTap" data-share="分享到QQ朋友" src="../../images/qq.png"/>
 			<image class="share-box-img" bindtap="modalTap" data-share="分享到微博" src="../../images/weibo.png"/>
-		</view>
-		<view class="share-box-close" bindtap="shareClose">关闭</view>
+		</view-->
+		<!--view class="share-box-close" bindtap="shareClose">关闭</view-->
+    <view class="share-box-text" bindtap="shareClose">购买链接已复制到剪贴板，打开浏览器继续。</view>
 	</view>
 	
 	<view class="share-box-opacity" animation="{{shareOpacity}}" bindtap="shareClose"></view>

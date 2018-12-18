@@ -150,6 +150,50 @@ module.exports = {
     }, "GET", {}, { "Api-Key": "foobar" });
   },
 
+  // 记录用户行为
+  trace: function (actionType="view",actionData={},callback) {
+    console.log("Util::trace");
+    var that = this;
+    var header = {
+      "Content-Type": "application/vnd.kafka.json.v2+json",
+      "Accept": "application/vnd.kafka.v2+json",
+    }
+    var weight = 0;
+    if ("buy step3" == actionType) { 
+      weight = 10; 
+    } else if ("buy step2" == actionType) { 
+      weight = 8; 
+    } else if ("buy step1" == actionType) { 
+      weight = 5; 
+    } else if ("share" == actionType) {
+       weight = 3; 
+    } else if("like" == actionType) { 
+      weight = 2; 
+    } else if ("view" == actionType) {
+      weight = 1;
+    }else{
+      weight = 0;
+    }
+    var record=actionData;
+    record.client = "wxprogram";
+    record.action = actionType;
+    record.weight = weight;
+    record.timestamp = new Date();
+    var msg = {
+      "records": [{
+        "value": record
+      }]
+    };
+    //var kafka = "http://kafka-rest.shouxinjk.net/topics/log";
+    var kafka = "https://data.shouxinjk.net/kafka-rest/topics/log";
+    that.AJAX(kafka, function (res) {
+      if (typeof callback === "function") {
+        callback(res);
+      } else {
+        console.log("Util::trace only accept callback function as parameter.");
+      }
+    }, "POST", msg, header);
+  },
     /**
      * 获取格式化日期
      * 20161002
